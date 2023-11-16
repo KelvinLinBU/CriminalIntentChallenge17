@@ -1,5 +1,6 @@
 package com.bignerdranch.android.criminalintent
 
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
@@ -11,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.core.view.doOnLayout
@@ -112,7 +114,8 @@ class CrimeDetailFragment : Fragment() {
                 takePhoto.launch(photoUri)
 
             }
-            zoomin(photoName)
+
+
             val captureImageIntent = takePhoto.contract.createIntent(
                 requireContext(),
                 null
@@ -172,11 +175,24 @@ class CrimeDetailFragment : Fragment() {
                 startActivity(chooserIntent)
             }
 
+
             crimeSuspect.text = crime.suspect.ifEmpty {
                 getString(R.string.crime_suspect_text)
             }
 
             updatePhoto(crime.photoFileName)
+            crimePhoto.setOnClickListener {
+                if (crime.photoFileName == null) {
+                    val text = "No image yet!"
+                    val duration = Toast.LENGTH_SHORT
+                    val toast = Toast.makeText(context, text, duration) // in Activity
+                    toast.show()
+                }
+                else {
+                    val imageZoom = ImageFragment.newInstance(crime.photoFileName)
+                    imageZoom.show(childFragmentManager, ImageFragment.TAG)
+                }
+            }
         }
     }
 
@@ -248,26 +264,4 @@ class CrimeDetailFragment : Fragment() {
             }
         }
     }
-    private fun zoomin(photoFileName: String?){
-        val thumbnailImageView = photoFileName?.let {
-            File(requireContext().applicationContext.filesDir, it)
-        }
-        if (thumbnailImageView?.exists() == true) {
-            binding.crimePhoto.doOnLayout { measuredView ->
-                val scaledBitmap = getScaledBitmap(
-                    thumbnailImageView.path,
-                    measuredView.width,
-                    measuredView.height
-                )
-                binding.crimePhoto.setImageBitmap(scaledBitmap)
-                binding.crimePhoto.tag = photoFileName
-
-                val image = view?.findViewById<ImageView>(R.id.crime_photo)
-                image?.setOnClickListener {
-                    val zoomedInDialogFragment =
-                        zoominfragment.newInstance(R.drawable.yestest_foreground)
-                    zoomedInDialogFragment.show(childFragmentManager, zoominfragment.TAG)
-                }
-            }
-    }
-}}
+}
